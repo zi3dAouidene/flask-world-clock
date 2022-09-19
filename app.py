@@ -1,11 +1,34 @@
 from flask import Flask, request, render_template
 import requests
+from logging.config import dictConfig
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] [%(levelname)s | %(module)s] %(message)s",
+                "datefmt": "%B %d, %Y %H:%M:%S %Z",
+            }
+        },
+        "handlers": {
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": "worldClock.log",
+                "formatter": "default",
+            },
+        },
+        "root": {"level": "DEBUG", "handlers": ["file"]},
+    }
+)
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def home():
+
+    app.logger.info("A user visited the home page")
 
     return render_template("home.html")
 
@@ -16,6 +39,8 @@ def search():
     # Get the search query
     query = request.form["q"]
 
+    app.logger.info("A user performed a search. >>> %s", query)
+
     # Pass the search query to the Nominatim API to get a location
     location = requests.get(
         "https://nominatim.openstreetmap.org/search",
@@ -24,6 +49,9 @@ def search():
 
     # If a location is found, pass the coordinate to the Time API to get the current time
     if location:
+
+        app.logger.info("A location is found. >>> %s", location)
+
         coordinate = [location[0]["lat"], location[0]["lon"]]
 
         time = requests.get(
@@ -35,5 +63,7 @@ def search():
 
     # If a location is NOT found, return the error page
     else:
+
+        app.logger.info("A location is NOT found.")
 
         return render_template("fail.html")
