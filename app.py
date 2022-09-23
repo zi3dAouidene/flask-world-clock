@@ -1,6 +1,16 @@
-from flask import Flask, request, render_template
 import requests
+import logging
+import json
+from flask import Flask, request, render_template
 from logging.config import dictConfig
+
+
+class JSONFormatter(logging.Formatter):
+	def __init__(self):
+		super().__init__()
+	def format(self, record):
+		record.msg = json.dumps(record.msg)
+		return super().format(record)
 
 dictConfig(
     {
@@ -12,13 +22,22 @@ dictConfig(
             }
         },
         "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            },
             "file": {
                 "class": "logging.FileHandler",
                 "filename": "worldClock.log",
                 "formatter": "default",
             },
+            "logtail": {
+                "class": "logtail.LogtailHandler",
+                "source_token": "qU73jvQjZrNFHimZo4miLdxF",
+                "formatter": JSONFormatter(),
+            },
         },
-        "root": {"level": "DEBUG", "handlers": ["file"]},
+        "root": {"level": "DEBUG", "handlers": ["console", "file", "logtail"]},
     }
 )
 
